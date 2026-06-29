@@ -1,184 +1,112 @@
-Project: URL Shortener (Version 1)
-Goal
+# URL Shortener
 
-A user submits a long URL:
+A production-inspired URL Shortener built with **FastAPI** and **PostgreSQL** to learn backend development and system design fundamentals. The project starts with a simple URL shortening service and will be incrementally enhanced with features such as caching, analytics, authentication, rate limiting, Docker, and scalable architecture.
 
-https://www.youtube.com/watch?v=dQw4w9WgXcQ
+## Project Goal
 
-We return:
+The objective of this project is to understand how a real-world backend service is designed and implemented rather than simply building a CRUD application. Throughout the project, emphasis is placed on clean architecture, separation of concerns, database design, API development, and scalability.
 
-http://localhost:8000/aBc123
+## Features (Version 1)
 
-When someone opens
+- Shorten long URLs into unique, compact links
+- Redirect users to the original URL
+- Store URL mappings in PostgreSQL
+- Automatic database table creation using SQLAlchemy
+- RESTful API built with FastAPI
 
-http://localhost:8000/aBc123
+## Planned Features
 
-they are redirected to the original URL.
+### Version 2
+- Click analytics
+- Custom short URLs
+- URL expiration
+- JWT Authentication
+- Rate limiting
+- QR code generation
 
-Step 1: Requirements
-Functional Requirements
-Shorten a URL
-Redirect to the original URL
-Store URLs in a database
-Non-functional Requirements
-Fast lookups
-Unique short codes
-Simple REST API
-Easy to extend later
-Step 2: High-Level Design
-          Client
-             │
- POST /shorten
-             │
-             ▼
-        FastAPI Server
-             │
-             ▼
-        PostgreSQL
-             │
-             ▼
-      URL Mapping Table
+### Version 3
+- Redis caching
+- Background workers
+- Docker & Docker Compose
+- Nginx reverse proxy
+- Horizontal scaling
+- Load balancing
+- Monitoring with Prometheus and Grafana
 
-Flow:
+## Tech Stack
 
-User
- ↓
-POST /shorten
- ↓
-FastAPI
- ↓
-Generate Short Code
- ↓
-Save in PostgreSQL
- ↓
-Return Short URL
-Step 3: Choose the Tech Stack
-Component	Technology
-Backend	FastAPI
-Database	PostgreSQL
-ORM	SQLAlchemy
-Validation	Pydantic
-Server	Uvicorn
+| Component | Technology |
+|-----------|------------|
+| Backend | FastAPI |
+| Language | Python 3 |
+| Database | PostgreSQL |
+| ORM | SQLAlchemy |
+| Validation | Pydantic |
+| Environment Variables | python-dotenv |
+| Server | Uvicorn |
 
-Later we'll add Redis and Docker.
+## High-Level Architecture
 
-Step 4: Project Structure
+```text
+           Client
+              │
+              ▼
+        FastAPI Backend
+              │
+              ▼
+        SQLAlchemy ORM
+              │
+              ▼
+         PostgreSQL
+```
+
+## Project Structure
+
+```text
 url-shortener/
-
-app/
 │
-├── main.py
-├── database.py
-├── models.py
-├── schemas.py
-├── crud.py
-├── utils.py
-└── config.py
+├── app/
+│   ├── __init__.py
+│   ├── main.py
+│   ├── database.py
+│   ├── models.py
+│   ├── schemas.py
+│   ├── crud.py
+│   └── utils.py
+│
+├── .env
+├── requirements.txt
+└── README.md
+```
 
-requirements.txt
+## Learning Objectives
 
-Each file has a single responsibility:
+This project is designed to provide hands-on experience with:
 
-main.py → API routes
-database.py → Database connection
-models.py → Database tables
-schemas.py → Request/response models
-crud.py → Database operations
-utils.py → Short code generation
-config.py → Configuration
+- REST API development
+- Database modeling
+- SQLAlchemy ORM
+- Clean project architecture
+- Dependency Injection
+- HTTP status codes and redirects
+- System Design fundamentals
+- Backend scalability concepts
+- Production-ready development practices
 
-This separation keeps the code maintainable as the project grows.
+## Development Roadmap
 
-Step 5: Database Design
+- [x] Design system architecture
+- [x] Set up FastAPI project
+- [x] Configure PostgreSQL
+- [x] Create SQLAlchemy models
+- [ ] Build CRUD layer
+- [ ] Implement URL shortening logic
+- [ ] Create redirect endpoint
+- [ ] Add analytics
+- [ ] Integrate Redis
+- [ ] Dockerize the application
+- [ ] Scale to a distributed architecture
 
-We'll store one record per shortened URL.
+## Future Scope
 
-Table: urls
-Column	Type	Description
-id	BIGSERIAL	Primary key
-original_url	TEXT	Long URL
-short_code	VARCHAR(10)	Generated code
-created_at	TIMESTAMP	Creation time
-
-Example:
-
-id	original_url	short_code
-1	https://google.com	abC123
-Step 6: API Design
-1. Create Short URL
-POST /shorten
-
-Request
-
-{
-    "url": "https://google.com"
-}
-
-Response
-
-{
-    "short_url": "http://localhost:8000/aBc123"
-}
-2. Redirect
-GET /aBc123
-
-Response
-
-302 Redirect
-
-The browser automatically navigates to the original URL.
-
-Step 7: Request Flow
-Client
-   │
-POST /shorten
-   │
-   ▼
-Validate URL
-   │
-Generate Code
-   │
-Save to Database
-   │
-Return Short URL
-Redirect Flow
-Browser
-   │
-GET /aBc123
-   │
-Look up Database
-   │
-Find original URL
-   │
-Return HTTP 302
-   │
-Browser opens destination
-Step 8: Database Schema
-CREATE TABLE urls (
-    id BIGSERIAL PRIMARY KEY,
-    original_url TEXT NOT NULL,
-    short_code VARCHAR(10) UNIQUE NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-Step 9: Milestone Plan
-
-We'll build this incrementally:
-
-Milestone 1: Project Setup
-Create the FastAPI project
-Set up PostgreSQL
-Configure SQLAlchemy
-Verify database connectivity
-Milestone 2: URL Shortening
-Accept a URL
-Generate a unique short code
-Store it in the database
-Return the shortened URL
-Milestone 3: Redirection
-Look up the short code
-Redirect to the original URL
-Return 404 for unknown codes
-Milestone 4: Testing
-Test API endpoints
-Handle invalid URLs
-Handle duplicate codes
+As the project evolves, it will incorporate concepts commonly used in production systems, including distributed caching, asynchronous processing, load balancing, observability, and fault tolerance. The end goal is to transform a simple URL shortener into a scalable backend service that demonstrates both software engineering best practices and core system design principles.
