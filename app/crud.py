@@ -38,3 +38,13 @@ def short_code_exists(
         .first()
         is not None
     )
+
+def url_exists(
+    db : Session,
+    original_url : str
+) :
+    return (
+        db.query(URL)
+        .filter(URL.original_url == original_url)
+        .first()
+    )
