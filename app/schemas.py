@@ -1,8 +1,13 @@
-from pydantic import BaseModel, HttpUrl
+from pydantic import BaseModel, HttpUrl, Field
 from datetime import datetime
 
 class URLCreate(BaseModel):
     url: HttpUrl
+    custom_alias : str | None = Field(
+        default=None,
+        min_length=3,
+        max_length=20,
+    )
 
 
 class URLResponse(BaseModel):
@@ -15,3 +20,4 @@ class URLAnalytics(BaseModel):
     clicks: int
     created_at: datetime
     last_accessed: datetime | None
+
