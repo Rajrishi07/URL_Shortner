@@ -58,3 +58,34 @@ def test_missing_short_code():
     )
 
     assert response.status_code == 404
+
+def test_create_custom_alias():
+    response = client.post(
+        "/api/shorten",
+        json={
+            "url": "https://github.com",
+            "custom_alias": "github",
+        },
+    )
+
+    assert response.status_code == 200
+
+    assert response.json()["short_url"].endswith("/github")
+
+def test_duplicate_alias():
+    payload = {
+        "url": "https://github.com",
+        "custom_alias": "github",
+    }
+
+    client.post("/api/shorten", json=payload)
+
+    response = client.post(
+        "/api/shorten",
+        json={
+            "url": "https://google.com",
+            "custom_alias": "github",
+        },
+    )
+
+    assert response.status_code == 409

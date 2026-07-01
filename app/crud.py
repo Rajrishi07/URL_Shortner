@@ -30,18 +30,6 @@ def get_url_by_short_code(
     )
 
 
-def short_code_exists(
-    db : Session, 
-    short_code : str
-) -> bool:
-    return (
-        db.query(URL)
-        .filter(URL.short_code == short_code)
-        .first()
-        is not None
-    )
-
-
 def url_exists(
     db : Session,
     original_url : str
@@ -53,7 +41,10 @@ def url_exists(
     )
 
 
-def increment_clicks(db: Session, url_id: int) -> None:
+def increment_clicks(
+    db: Session,
+     url_id: int,
+) -> None:
     db.query(URL).filter(URL.id == url_id).update(
         {
             URL.clicks: URL.clicks + 1,

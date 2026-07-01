@@ -5,18 +5,30 @@ from sqlalchemy.orm import Session
 
 def create_short_url(
     db: Session,
-    original_url : str
+    original_url : str,
+    custom_alias : str | None = None,
 ):
-    exists =  crud.url_exists(db, str(original_url))
-    if exists:
-        logger.info("URL already exists for %s : Returning", original_url)
-        return {
-        "short_url": f"{settings.BASE_URL}/{exists.short_code}"
-        }
+    if custom_alias:
+        existing = crud.get_url_by_short_code(
+            db,
+            custom_alias,
+        )
 
-    short_code = utils.generate_unique_short_code(db)
+        if existing:
+            raise ValueError(
+                "Custom alias already exists."
+            )
 
-    crud.create_url(
+        short_code = custom_alias
+    else:
+        exists =  crud.url_exists(db, str(original_url))
+        if exists:
+            logger.info("Short URL already exists for %s : Returning", original_url)
+            return exists
+
+        short_code = utils.generate_unique_short_code(db)
+
+    url = crud.create_url(
         db=db,
         original_url=str(original_url),
         short_code=short_code,
@@ -28,6 +40,4 @@ def create_short_url(
         original_url,
     )
 
-    return {
-    "short_url": f"{settings.BASE_URL}/{short_code}"
-    }
+    return url

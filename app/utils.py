@@ -13,6 +13,5 @@ def generate_unique_short_code(db : Session) -> str:
     while True:
         code = generate_short_code()
 
-        if not crud.short_code_exists(db, code):
+        if not crud.get_url_by_short_code(db, code):
             return code
-

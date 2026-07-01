@@ -16,7 +16,20 @@ def shorten(
     db: Session = Depends(get_db)
 ):
     logger.info("Creating short URL for %s", request.url)
-    return url_services.create_short_url(
-        db,
-        str(request.url),
-    )
+    try:
+        url = url_services.create_short_url(
+            db=db,
+            original_url=str(request.url),
+            custom_alias=request.custom_alias,
+        )
+
+        return schemas.URLResponse(
+            short_url=f"{settings.BASE_URL}/{url.short_code}",
+        )
+
+    except ValueError as e:
+        logger.warning("Error while creating short URL for %s", str(e))
+        raise HTTPException(
+            status_code=409,
+            detail=str(e),
+        )
