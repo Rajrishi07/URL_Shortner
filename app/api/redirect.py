@@ -25,6 +25,8 @@ def redirect_url(
             detail = "Short URL not found"
         )
     
+    crud.increment_clicks(db, url.id)
+    
     logger.info(
         "Redirecting %s -> %s",
         short_code,

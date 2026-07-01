@@ -1,13 +1,12 @@
 
 from fastapi import FastAPI
-from app.database import Base, engine
-from app.api import shorten, redirect
+from app.api import shorten, redirect, urls
 
-Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
-app.include_router(shorten.shorten_router, prefix="/api", tags=["URLs"])
+app.include_router(shorten.shorten_router, prefix="/api", tags=["Shorten_URLs"])
 app.include_router(redirect.redirect_router, tags=["Redirect"])
+app.include_router(urls.url_router, prefix="/urls", tags=["URLs"])
 
 @app.get("/")
 def root():

@@ -1,5 +1,6 @@
 from sqlalchemy.orm import Session
 from app.models import URL
+from sqlalchemy.sql import func
 
 def create_url(
     db : Session,
@@ -16,6 +17,7 @@ def create_url(
     db.refresh(url)
 
     return url
+
 
 def get_url_by_short_code(
     db: Session,
@@ -39,6 +41,7 @@ def short_code_exists(
         is not None
     )
 
+
 def url_exists(
     db : Session,
     original_url : str
@@ -48,3 +51,13 @@ def url_exists(
         .filter(URL.original_url == original_url)
         .first()
     )
+
+
+def increment_clicks(db: Session, url_id: int) -> None:
+    db.query(URL).filter(URL.id == url_id).update(
+        {
+            URL.clicks: URL.clicks + 1,
+            URL.last_accessed: func.now(),
+        }
+    )
+    db.commit()

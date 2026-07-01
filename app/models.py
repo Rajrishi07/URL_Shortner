@@ -17,3 +17,13 @@ class URL(Base):
     server_default=func.now()
     )
 
+    clicks = Column(
+        Integer,
+        nullable=False,
+        default=0
+    )
+
+    last_accessed = Column(
+        DateTime(timezone=True),
+        nullable=True
+    )
