@@ -2,6 +2,7 @@ from fastapi import Depends, HTTPException, APIRouter
 from fastapi.responses import RedirectResponse
 
 from sqlalchemy.orm import Session
+from datetime import timezone, datetime
 
 from app.database import get_db
 from app import crud
@@ -23,6 +24,16 @@ def redirect_url(
         raise HTTPException(
             status_code = 404,
             detail = "Short URL not found"
+        )
+    
+    if (
+        url.expires_at is not None
+        and datetime.now(timezone.utc) >= url.expires_at
+    ):
+        logger.warning("Short code %s has expired", short_code)
+        raise HTTPException(
+            status_code = 410,
+            detail = "Short URL has expired"
         )
     
     crud.increment_clicks(db, url.id)

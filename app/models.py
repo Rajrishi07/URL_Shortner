@@ -29,4 +29,6 @@ class URL(Base):
         nullable=True
     )
 
+    expires_at = Column(DateTime(timezone=True), nullable=True)
+
 

@@ -2,14 +2,18 @@ from sqlalchemy.orm import Session
 from app.models import URL
 from sqlalchemy.sql import func
 
+from datetime import datetime
+
 def create_url(
     db : Session,
     original_url: str,
-    short_code: str
+    short_code: str,
+    expires_at: datetime | None = None
 ):
     url = URL(
         original_url=original_url,
-        short_code=short_code
+        short_code=short_code,
+        expires_at=expires_at,
     )
 
     db.add(url)

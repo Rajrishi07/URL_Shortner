@@ -6,7 +6,7 @@ def test_home_page():
     assert response.status_code == 200
 
 
-def test_create_short_url():
+def test_create_short_url_without_expiration():
     response = client.post(
         "/api/shorten",
         json={
@@ -15,10 +15,12 @@ def test_create_short_url():
     )
 
     assert response.status_code == 200
+    assert response.json()["expires_at"] is None
 
     data = response.json()
 
     assert "short_url" in data
+
 
 def test_invalid_url():
     response = client.post(
@@ -89,3 +91,30 @@ def test_duplicate_alias():
     )
 
     assert response.status_code == 409
+
+def test_create_short_url_with_expiration():
+    response = client.post(
+        "/api/shorten",
+        json={
+            "url": "https://www.blinkit.com",
+            "expires_in_days": 5
+        },
+    )
+
+    assert response.status_code == 200
+
+    data = response.json()
+
+    assert "short_url" in data
+    assert data["expires_at"] is not None
+
+def test_invalid_expiration_days():
+    response = client.post(
+        "/api/shorten",
+        json={
+            "url": "https://www.blinkit2.com",
+            "expires_in_days": -1
+        },
+    )
+
+    assert response.status_code == 422

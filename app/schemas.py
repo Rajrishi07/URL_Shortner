@@ -11,6 +11,7 @@ class URLCreate(BaseModel):
         min_length=3,
         max_length=20,
     )
+    expires_in_days: int | None = None
 
     @field_validator("custom_alias")
     @classmethod
@@ -26,10 +27,18 @@ class URLCreate(BaseModel):
             )
 
         return value
+    
+    @field_validator("expires_in_days")
+    @classmethod
+    def validate_expires_in_days(cls, value):
+        if value is not None and value <= 0:
+            raise ValueError("Expiration must be a positive integer.")
+        return value
 
 
 class URLResponse(BaseModel):
     short_url: str
+    expires_at: str | None = None
 
 
 class URLAnalytics(BaseModel):

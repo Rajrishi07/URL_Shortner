@@ -21,10 +21,12 @@ def shorten(
             db=db,
             original_url=str(request.url),
             custom_alias=request.custom_alias,
+            expires_in_days=request.expires_in_days,
         )
 
         return schemas.URLResponse(
             short_url=f"{settings.BASE_URL}/{url.short_code}",
+            expires_at=url.expires_at.isoformat() if url.expires_at else None,
         )
 
     except ValueError as e:

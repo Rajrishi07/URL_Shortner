@@ -3,10 +3,13 @@ from app.logger import logger
 from app.config import settings
 from sqlalchemy.orm import Session
 
+from datetime import timezone, timedelta, datetime
+
 def create_short_url(
     db: Session,
     original_url : str,
     custom_alias : str | None = None,
+    expires_in_days : int | None = None,
 ):
     if custom_alias:
         existing = crud.get_url_by_short_code(
@@ -27,17 +30,23 @@ def create_short_url(
             return exists
 
         short_code = utils.generate_unique_short_code(db)
+    
+    expires_at = None
+    if expires_in_days:
+        expires_at = datetime.now(timezone.utc) + timedelta(days=expires_in_days)
 
     url = crud.create_url(
         db=db,
         original_url=str(original_url),
         short_code=short_code,
+        expires_at=expires_at,
     )
 
     logger.info(
-        "Short URL created: %s -> %s",
+        "Short URL created: %s -> %s (Expires at: %s)",
         short_code,
         original_url,
+        expires_at.isoformat() if expires_at else "Never",
     )
 
     return url
