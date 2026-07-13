@@ -1,0 +1,14 @@
+version: "3.9"
+
+services:
+
+  redis:
+
+    image: redis:7.0-alpine
+
+    container_name: url-shortener-redis
+
+    restart: unless-stopped
+
+    ports:
+      - "6379:6379"

@@ -118,3 +118,4 @@ def test_invalid_expiration_days():
     )
 
     assert response.status_code == 422
+
