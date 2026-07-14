@@ -5,12 +5,18 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.services import url_services
+from app.dependencies import rate_limit
 
 from app.logger import logger
 
 redirect_router = APIRouter()
 
-@redirect_router.get("/{short_code}")
+@redirect_router.get(
+        "/{short_code}",
+        dependencies=[
+            Depends(rate_limit.check_rate_limit)
+            ],
+        )
 def redirect_url(
     short_code : str,
     db: Session = Depends(get_db),

@@ -64,7 +64,7 @@ def resolve_short_url(db: Session, short_code: str):
     cache_key = f"{CACHE_PREFIX}{short_code}"
     cached_url = redis_client.get(cache_key)
 
-    if cached_url is not None:
+    if cached_url:
         logger.info(
             "Cache HIT for %s",
             short_code,
@@ -75,39 +75,35 @@ def resolve_short_url(db: Session, short_code: str):
             "Cache MISS for %s",
             short_code,
         )
-        db_url = crud.get_url_by_short_code(db, short_code)
+        model = crud.get_url_by_short_code(db, short_code)
     
-        if db_url is None:
+        if model is None:
             logger.warning("Short code %s not found", short_code)
             raise HTTPException(
                 status_code = 404,
                 detail = "Short URL not found"
             )
         
-        url = model_to_domain(db_url)
+        url = model_to_domain(model)
         
         redis_client.setex(
             cache_key,
             CACHE_TTL,
             resolved_url_to_json(url),
         )
-        #crud.increment_clicks(db, url.id)
+    
+    now = datetime.now(timezone.utc)
     if (
             url.expires_at is not None
-            and datetime.now(timezone.utc) >= url.expires_at
+            and now >= url.expires_at
         ):
             logger.warning("Short code %s has expired", short_code)
             raise HTTPException(
                 status_code = 410,
                 detail = "Short URL has expired"
             )
-    
-    return ResolvedURL(
-        id=url.id,
-        short_code=url.short_code,
-        original_url=url.original_url,
-        expires_at=url.expires_at,
-    )
+    crud.increment_clicks(db, url.id)
+    return url
 
 
 def resolved_url_to_json(url: ResolvedURL) -> str:
@@ -135,13 +131,6 @@ def json_to_resolved_url(data: str) -> ResolvedURL:
     )
 
 
-
-def serialize_url(url):
-    pass
-
-def deserialize_url(data):
-    pass
-
 def model_to_domain(url):
     return ResolvedURL(
         id=url.id,
@@ -152,3 +141,12 @@ def model_to_domain(url):
 
 def cache_to_domain():
     pass
+
+def invalidate_url_cache(short_code: str) -> None:
+    cache_key = f"{CACHE_PREFIX}{short_code}"
+    redis_client.delete(cache_key)
+
+    logger.info(
+        "Cache invalidated for %s",
+        short_code,
+    )
