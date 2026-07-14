@@ -150,3 +150,6 @@ def invalidate_url_cache(short_code: str) -> None:
         "Cache invalidated for %s",
         short_code,
     )
+
+def cleanup_expired_urls(db: Session) -> int:
+    return crud.delete_expired_utls(db)

@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 from app.models import URL
 from sqlalchemy.sql import func
 
-from datetime import datetime
+from datetime import datetime, timezone
 
 def create_url(
     db : Session,
@@ -56,3 +56,16 @@ def increment_clicks(
         }
     )
     db.commit()
+
+
+def delete_expired_utls(db: Session) -> int:
+    deleted = (
+        db.query(URL)
+        .filter(
+            URL.expires_at.is_not(None),
+            URL.expires_at < datetime.now(timezone.utc),
+        )
+        .delete(synchronize_session=False)
+    )
+    db.commit()
+    return deleted
