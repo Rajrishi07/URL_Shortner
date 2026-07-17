@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-      - feature/**
+      - feature/*
   pull_request:
     branches:
       - main
@@ -23,14 +23,14 @@ jobs:
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB : url_shortener_test
 
-          ports:
-            - 5432:5432
+        ports:
+          - 5432:5432
 
-          options: >-
-            --health-cmd="pg_isready -U postgres -d url_shortener_test"
-            --health-interval=10s
-            --health-timeout=5s
-            --health-retries=5
+        options: >-
+          --health-cmd="pg_isready -U postgres -d url_shortener_test"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
       redis:
         image: redis:7-alpine
 
@@ -79,4 +79,4 @@ jobs:
             --cov-report=term-missing
 
       - name: Build Docker image
-        run: docker build -t url-shortener .
+        run: docker build -t url-shortener:latest .
