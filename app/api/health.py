@@ -3,8 +3,6 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 from app.redis_client import redis_client
 
-redis_client.ping()
-
 from app.database import get_db
 from app.config import settings
 

@@ -3,9 +3,9 @@ from app.logger import logger
 from app.config import settings
 
 from app.domain import ResolvedURL
+from app.exceptions.url import URLExpiredException, URLNotFoundException, InvalidURLException, DuplicateAliasException
 from sqlalchemy.orm import Session
 
-from fastapi import HTTPException
 from datetime import timezone, timedelta, datetime
 
 import json
@@ -27,9 +27,7 @@ def create_short_url(
         )
 
         if existing:
-            raise ValueError(
-                "Custom alias already exists."
-            )
+            raise DuplicateAliasException(custom_alias)
 
         short_code = custom_alias
     else:
@@ -79,10 +77,7 @@ def resolve_short_url(db: Session, short_code: str):
     
         if model is None:
             logger.warning("Short code %s not found", short_code)
-            raise HTTPException(
-                status_code = 404,
-                detail = "Short URL not found"
-            )
+            raise URLNotFoundException(short_code)
         
         url = model_to_domain(model)
         
@@ -98,10 +93,7 @@ def resolve_short_url(db: Session, short_code: str):
             and now >= url.expires_at
         ):
             logger.warning("Short code %s has expired", short_code)
-            raise HTTPException(
-                status_code = 410,
-                detail = "Short URL has expired"
-            )
+            raise URLExpiredException(short_code)
     crud.increment_clicks(db, url.id)
     return url
 
@@ -153,3 +145,10 @@ def invalidate_url_cache(short_code: str) -> None:
 
 def cleanup_expired_urls(db: Session) -> int:
     return crud.delete_expired_utls(db)
+
+def get_analytics(db: Session, short_code):
+    url = crud.get_url_by_short_code(db, short_code)
+
+    if not url:
+        raise URLNotFoundException(short_code)
+    return url

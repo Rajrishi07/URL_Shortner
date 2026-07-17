@@ -12,6 +12,9 @@ services:
 
     ports:
       - "8000:8000"
+    volumes:
+      - .:/app          # 1. Mounts your local code into the container
+      - /app/.venv
 
     env_file:
       - .env.docker

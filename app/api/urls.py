@@ -1,9 +1,12 @@
-from fastapi import Depends, HTTPException, APIRouter, Depends
+from fastapi import Depends, APIRouter, Depends
 from sqlalchemy.orm import Session
 
+
+from app.exceptions.url import URLNotFoundException
 from app.database import get_db
 from app import schemas, crud
 from app.config import settings
+from app.services import url_services
 url_router = APIRouter()
 
 @url_router.get(
@@ -14,13 +17,8 @@ def get_analytics(
     short_code : str,
     db : Session = Depends(get_db),
 ):
-    url = crud.get_url_by_short_code(db, short_code)
-
-    if url is None:
-        raise HTTPException(
-            status_code=404,
-            details="Short URL not found",
-        )
+    
+    url = url_services.get_analytics(db, short_code)
     
     return {
         "original_url": url.original_url,
