@@ -1,6 +1,7 @@
 from sqlalchemy import Column, Integer, String, DateTime
 from sqlalchemy.sql import func
 
+
 from app.database import Base 
 
 class URL(Base):
@@ -16,4 +17,18 @@ class URL(Base):
     DateTime(timezone=True),
     server_default=func.now()
     )
+
+    clicks = Column(
+        Integer,
+        nullable=False,
+        default=0
+    )
+
+    last_accessed = Column(
+        DateTime(timezone=True),
+        nullable=True
+    )
+
+    expires_at = Column(DateTime(timezone=True), nullable=True)
+
 
