@@ -40,3 +40,16 @@ def client():
     with TestClient(app) as client:
         yield client
         app.dependency_overrides.clear()
+
+def create_test_url(client, **kwargs):
+    payload = {
+        "url": "https://example.com",
+        **kwargs,
+    }
+
+    response = client.post(
+        "/api/shorten",
+        json=payload,
+    )
+
+    return response

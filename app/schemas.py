@@ -1,6 +1,8 @@
-from pydantic import BaseModel, HttpUrl, Field, field_validator
+from pydantic import BaseModel, HttpUrl, Field, field_validator, ConfigDict
 from datetime import datetime
 import re
+from enum import Enum
+
 
 ALIAS_PATTERN = re.compile(r"^[a-zA-Z0-9_-]+$")
 
@@ -37,6 +39,7 @@ class URLCreate(BaseModel):
 
 
 class URLResponse(BaseModel):
+    id: int
     short_url: str
     expires_at: str | None = None
 
@@ -48,3 +51,25 @@ class URLAnalytics(BaseModel):
     created_at: datetime
     last_accessed: datetime | None
 
+class URLItem(BaseModel):
+    id: int
+    short_code: str
+    original_url: str
+    clicks: int
+    created_at: datetime
+    expires_at: datetime | None
+    last_accessed: datetime | None
+
+    model_config = ConfigDict(from_attributes=True)
+
+class URLListResponse(BaseModel):
+    items: list[URLItem]
+    page: int
+    pages: int
+    total: int
+
+class URLSort(str, Enum):
+    CREATED_AT_DESC = "created_at_desc"
+    CREATED_AT_ASC = "created_at_asc"
+    CLICKS_DESC = "clicks_desc"
+    CLICKS_ASC = "clicks_asc"

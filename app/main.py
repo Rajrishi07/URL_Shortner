@@ -21,9 +21,23 @@ app = FastAPI(
 register_exception_handler(app)
 app.add_middleware(RequestLoggingMiddleware)
 app.include_router(health_router)
-app.include_router(shorten.shorten_router, prefix="/api", tags=["Shorten_URLs"])
-app.include_router(redirect.redirect_router, tags=["Redirect"])
-app.include_router(urls.url_router, prefix="/urls", tags=["URLs"])
+
+app.include_router(
+    shorten.shorten_router,
+    prefix="/api",
+    tags=["Shorten URLs"],
+)
+
+app.include_router(
+    urls.url_router,
+    prefix="/api",
+    tags=["URL Management"],
+)
+
+app.include_router(
+    redirect.redirect_router,
+    tags=["Redirect"],
+)
 
 
 @app.get("/favicon.ico", include_in_schema=False)

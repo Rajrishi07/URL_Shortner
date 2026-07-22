@@ -1,6 +1,10 @@
 from sqlalchemy.orm import Session
 from app.models import URL
 from sqlalchemy.sql import func
+from sqlalchemy import or_
+from sqlalchemy.orm import Session
+
+from app.schemas import URLSort
 
 from datetime import datetime, timezone
 
@@ -69,3 +73,67 @@ def delete_expired_utls(db: Session) -> int:
     )
     db.commit()
     return deleted
+
+def get_urls(
+    db: Session,
+    page: int,
+    limit: int,
+    search: str | None,
+    sort: URLSort,
+    active_only: bool,
+) -> tuple[list[URL], int]:
+
+    query = db.query(URL)
+
+    # Search
+    if search:
+        query = query.filter(
+            or_(
+                URL.short_code.ilike(f"%{search}%"),
+                URL.original_url.ilike(f"%{search}%"),
+            )
+        )
+
+    # Active filter
+    if active_only:
+        now = datetime.now(timezone.utc)
+
+        query = query.filter(
+            or_(
+                URL.expires_at.is_(None),
+                URL.expires_at > now,
+            )
+        )
+        
+    #Shorting
+    SORT_MAPPING = {
+        URLSort.CREATED_AT_DESC: URL.created_at.desc(),
+        URLSort.CREATED_AT_ASC: URL.created_at.asc(),
+        URLSort.CLICKS_DESC: URL.clicks.desc(),
+        URLSort.CLICKS_ASC: URL.clicks.asc(),
+    }
+
+    query = query.order_by(
+        SORT_MAPPING[sort]
+    )
+
+    total = query.count()
+
+    items = (
+        query.offset((page - 1) * limit)
+        .limit(limit)
+        .all()
+    )
+
+    return items, total
+
+def get_url_by_id(
+    db: Session,
+    url_id: int,
+) -> URL | None:
+
+    return (
+        db.query(URL)
+        .filter(URL.id == url_id)
+        .first()
+    )

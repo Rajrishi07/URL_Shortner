@@ -24,6 +24,7 @@ def shorten(
     )
 
     return schemas.URLResponse(
+        id=url.id,
         short_url=f"{settings.BASE_URL}/{url.short_code}",
         expires_at=url.expires_at.isoformat() if url.expires_at else None,
     )

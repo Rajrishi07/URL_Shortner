@@ -1,16 +1,19 @@
 from app import crud, utils
 from app.logger import logger
 from app.config import settings
+from app.schemas import URLItem, URLListResponse, URLSort
 
 from app.domain import ResolvedURL
-from app.exceptions.url import URLExpiredException, URLNotFoundException, InvalidURLException, DuplicateAliasException
+from app.exceptions.url import URLExpiredException, URLNotFoundException, URLIdNotFoundException, DuplicateAliasException
 from sqlalchemy.orm import Session
 
 from datetime import timezone, timedelta, datetime
 
 import json
+import math
 
 from app.redis_client import redis_client
+
 CACHE_PREFIX = "url:"
 CACHE_TTL = 3600
 
@@ -152,3 +155,45 @@ def get_analytics(db: Session, short_code):
     if not url:
         raise URLNotFoundException(short_code)
     return url
+
+def list_urls(
+    db: Session,
+    page: int,
+    limit: int,
+    search: str | None,
+    sort: URLSort,
+    active_only: bool,
+) -> URLListResponse:
+
+    urls, total = crud.get_urls(
+        db=db,
+        page=page,
+        limit=limit,
+        search=search,
+        sort=sort,
+        active_only=active_only,
+    )
+
+    pages = math.ceil(total / limit) if total else 0
+
+    return URLListResponse(
+        items=[
+            URLItem.model_validate(url)
+            for url in urls
+        ],
+        page=page,
+        pages=pages,
+        total=total,
+    )
+
+def get_url(
+    db: Session,
+    url_id: int,
+) -> URLItem:
+
+    url = crud.get_url_by_id(db, url_id)
+
+    if url is None:
+        raise URLIdNotFoundException(url_id)
+
+    return URLItem.model_validate(url)
