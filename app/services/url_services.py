@@ -1,7 +1,7 @@
 from app import crud, utils
 from app.logger import logger
 from app.config import settings
-from app.schemas import URLItem, URLListResponse, URLSort
+from app.schemas import URLItem, URLListResponse, URLSort, URLUpdateRequest
 
 from app.domain import ResolvedURL
 from app.exceptions.url import URLExpiredException, URLNotFoundException, URLIdNotFoundException, DuplicateAliasException
@@ -197,3 +197,62 @@ def get_url(
         raise URLIdNotFoundException(url_id)
 
     return URLItem.model_validate(url)
+
+def update_url(
+    db: Session,
+    url_id: int,
+    payload: URLUpdateRequest,
+) -> URLItem:
+
+    # Ensure the URL exists
+    url = crud.get_url_by_id(
+        db=db,
+        url_id=url_id,
+    )
+
+    if url is None:
+        raise URLIdNotFoundException(url_id)
+
+    # Validate custom alias (if being updated)
+    if (
+        payload.custom_alias is not None
+        and payload.custom_alias != url.short_code
+    ):
+        existing = crud.get_url_by_short_code(
+            db=db,
+            short_code=payload.custom_alias,
+        )
+
+        if existing is not None:
+            raise DuplicateAliasException(payload.custom_alias)
+
+    # Persist changes
+    updated_url = crud.update_url(
+        db=db,
+        url=url,
+        custom_alias=payload.custom_alias,
+        expires_at=payload.expires_at,
+    )
+
+    return URLItem.model_validate(updated_url)
+
+def delete_url(
+    db: Session,
+    url_id: int,
+) -> None:
+
+    url = crud.get_url_by_id(
+        db=db,
+        url_id=url_id,
+    )
+
+    if url is None:
+        raise URLIdNotFoundException(url_id)
+
+    crud.delete_url(
+        db=db,
+        url=url,
+    )
+
+    
+    

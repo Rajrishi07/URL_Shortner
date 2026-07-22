@@ -1,4 +1,4 @@
-from fastapi import Depends, APIRouter, Depends, Query
+from fastapi import Response, Depends, APIRouter, Depends, Query, status
 from sqlalchemy.orm import Session
 
 
@@ -61,4 +61,38 @@ def get_url(
     return url_services.get_url(
         db=db,
         url_id=url_id,
+    )
+@url_router.patch(
+    "/urls/{url_id}",
+    response_model=schemas.URLItem,
+)
+def update_url(
+    url_id: int,
+    payload: schemas.URLUpdateRequest,
+    db: Session = Depends(get_db),
+):
+
+    return url_services.update_url(
+        db=db,
+        url_id=url_id,
+        payload=payload,
+    )
+
+
+@url_router.delete(
+    "/urls/{url_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+def delete_url(
+    url_id: int,
+    db: Session = Depends(get_db),
+):
+
+    url_services.delete_url(
+        db=db,
+        url_id=url_id,
+    )
+
+    return Response(
+        status_code=status.HTTP_204_NO_CONTENT,
     )

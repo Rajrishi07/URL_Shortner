@@ -74,6 +74,7 @@ def delete_expired_utls(db: Session) -> int:
     db.commit()
     return deleted
 
+
 def get_urls(
     db: Session,
     page: int,
@@ -127,6 +128,7 @@ def get_urls(
 
     return items, total
 
+
 def get_url_by_id(
     db: Session,
     url_id: int,
@@ -137,3 +139,28 @@ def get_url_by_id(
         .filter(URL.id == url_id)
         .first()
     )
+
+def update_url(
+    db: Session,
+    url: URL,
+    *,
+    custom_alias: str | None,
+    expires_at: datetime | None,
+) -> URL:
+    if custom_alias is not None:
+        url.short_code = custom_alias
+
+    if expires_at is not None:
+        url.expires_at = expires_at
+
+    db.commit()
+    db.refresh(url)
+
+    return url
+
+def delete_url(
+    db: Session,
+    url: URL,
+):
+    db.delete(url)
+    db.commit()

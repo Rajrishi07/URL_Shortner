@@ -1,4 +1,4 @@
-from pydantic import BaseModel, HttpUrl, Field, field_validator, ConfigDict
+from pydantic import BaseModel, HttpUrl, Field, field_validator, ConfigDict, model_validator
 from datetime import datetime
 import re
 from enum import Enum
@@ -73,3 +73,20 @@ class URLSort(str, Enum):
     CREATED_AT_ASC = "created_at_asc"
     CLICKS_DESC = "clicks_desc"
     CLICKS_ASC = "clicks_asc"
+
+class URLUpdateRequest(BaseModel):
+    custom_alias: str | None = None
+    expires_at: datetime | None = None
+
+    @model_validator(mode="after")
+    def validate_not_empty(self):
+
+        if (
+            self.custom_alias is None
+            and self.expires_at is None
+        ):
+            raise ValueError(
+                "At least one field must be provided."
+            )
+
+        return self
