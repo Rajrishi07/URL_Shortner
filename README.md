@@ -23,7 +23,8 @@ Designed as a portfolio project to demonstrate how scalable backend services are
 - ⚡ Redis caching for improved redirect performance
 - 🔒 Redis-based Rate Limiting
 - ⏳ URL Expiration with automatic background cleanup
-- 📊 Click Analytics & Last Access Tracking
+- 📊 Dashboard Analytics & Click Tracking
+- 📄 Complete URL Management (CRUD)
 - 📦 Alembic Database Migrations
 - 📝 Request Logging Middleware
 - ⚠️ Centralized Global Exception Handling
@@ -77,6 +78,8 @@ Designed as a portfolio project to demonstrate how scalable backend services are
 | **PostgreSQL** | Persistent storage for shortened URLs and analytics. |
 | **Redis** | Used for caching frequently accessed URLs and implementing request rate limiting. |
 | **APScheduler** | Periodically removes expired URLs from the database without impacting request latency. |
+| **Dashboard Service** | Aggregates URL statistics, top-performing URLs, and recently created URLs for the management dashboard. |
+
 
 ---
 
@@ -217,6 +220,9 @@ Responsibilities include:
 - URL creation
 - Duplicate URL detection
 - Custom alias validation
+- URL updates
+- URL deletion
+- Dashboard aggregation
 - URL expiration checks
 - Redirect logic
 - Analytics updates
@@ -235,7 +241,11 @@ Encapsulates all database interactions using SQLAlchemy.
 Examples include:
 
 - Creating shortened URLs
+- Fetching URLs by ID
 - Fetching URLs by short code
+- Updating URLs
+- Deleting URLs
+- Dashboard aggregation queries
 - Updating analytics
 - Deleting expired records
 
@@ -493,6 +503,25 @@ The application exposes health endpoints suitable for deployment environments.
 - Deployment monitoring
 - Readiness verification before serving traffic
 
+## 📈 Dashboard Aggregation
+
+The application exposes a dedicated dashboard endpoint that aggregates operational metrics in a single request.
+
+Returned metrics include:
+
+- Total URLs
+- Active URLs
+- Expired URLs
+- Total Redirects
+- Top Performing URLs
+- Recently Created URLs
+
+### Benefits
+
+- Single request for dashboard UI
+- Efficient SQL aggregation
+- Reduced frontend complexity
+
 ---
 
 ## 🐳 Dockerized Deployment
@@ -542,8 +571,11 @@ Tests cover:
 - Redirects
 - Duplicate aliases
 - URL expiration
+- URL CRUD operations
+- Dashboard endpoints
 - Rate limiting
 - Error handling
+- Validation
 
 ### Benefits
 
@@ -1022,12 +1054,19 @@ The application exposes endpoints for deployment monitoring.
 
 # 📖 API Overview
 
-| Method | Endpoint | Description |
-|---------|----------|-------------|
-| POST | `/api/shorten` | Create a shortened URL |
-| GET | `/{short_code}` | Redirect to original URL |
-| GET | `/health` | Health check |
-| GET | `/ready` | Readiness check |
+| Method | Endpoint                      | Description                |
+| ------ | ----------------------------- | -------------------------- |
+| POST   | `/api/shorten`                | Create a shortened URL     |
+| GET    | `/api/urls`                   | List all URLs              |
+| GET    | `/api/urls/{id}`              | Retrieve URL details       |
+| PATCH  | `/api/urls/{id}`              | Update alias or expiration |
+| DELETE | `/api/urls/{id}`              | Delete URL                 |
+| GET    | `/api/dashboard`              | Dashboard overview         |
+| GET    | `/api/analytics/{short_code}` | Click analytics            |
+| GET    | `/{short_code}`               | Redirect                   |
+| GET    | `/health`                     | Health check               |
+| GET    | `/ready`                      | Readiness check            |
+
 
 Interactive documentation is automatically available through Swagger UI.
 
@@ -1055,16 +1094,14 @@ This ensures that every change is automatically validated before merging.
 
 The current implementation focuses on building a production-oriented backend foundation. Future improvements may include:
 
-- [ ] User authentication & authorization
-- [ ] Custom domains for shortened URLs
-- [ ] QR code generation
-- [ ] URL analytics dashboard
+- [ ] Prometheus metrics endpoint
+- [ ] Grafana dashboard
+- [ ] QR Code generation
+- [ ] User authentication
 - [ ] Bulk URL shortening
-- [ ] Link preview generation
-- [ ] Prometheus & Grafana monitoring
-- [ ] Distributed cache deployment
+- [ ] Custom domains
 - [ ] Kubernetes deployment
-- [ ] Distributed task processing using Celery
+- [ ] Celery for distributed background jobs
 
 ---
 
