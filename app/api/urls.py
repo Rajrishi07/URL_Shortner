@@ -96,3 +96,12 @@ def delete_url(
     return Response(
         status_code=status.HTTP_204_NO_CONTENT,
     )
+
+@url_router.get(
+    "/dashboard",
+    response_model=schemas.DashboardResponse,
+)
+def get_dashboard(
+    db: Session = Depends(get_db),
+):
+    return url_services.get_dashboard(db)

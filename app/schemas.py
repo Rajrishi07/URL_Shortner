@@ -90,3 +90,30 @@ class URLUpdateRequest(BaseModel):
             )
 
         return self
+
+class DashboardTopURL(BaseModel):
+    id: int
+    short_code: str
+    original_url: str
+    clicks: int
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class DashboardRecentURL(BaseModel):
+    id: int
+    short_code: str
+    original_url: str
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class DashboardResponse(BaseModel):
+    total_urls: int
+    active_urls: int
+    expired_urls: int
+    total_clicks: int
+
+    top_urls: list[DashboardTopURL]
+    recent_urls: list[DashboardRecentURL]

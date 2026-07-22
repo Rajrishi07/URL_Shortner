@@ -61,10 +61,9 @@ def test_create_custom_alias(client):
     created = create_test_url(
         client,
         url="https://github.com",
-        custom_alias="github",
+        custom_alias="gith",
     ).json()
-
-    assert created["short_url"].endswith("/github")
+    assert created["short_url"].endswith("/gith")
 
 
 def test_duplicate_alias(client):

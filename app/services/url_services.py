@@ -1,7 +1,16 @@
 from app import crud, utils
 from app.logger import logger
 from app.config import settings
-from app.schemas import URLItem, URLListResponse, URLSort, URLUpdateRequest
+from app.schemas import (
+    URLItem, 
+    URLListResponse, 
+    URLSort, 
+    URLUpdateRequest,
+    DashboardResponse,
+    DashboardTopURL,
+    DashboardRecentURL,
+)
+
 
 from app.domain import ResolvedURL
 from app.exceptions.url import URLExpiredException, URLNotFoundException, URLIdNotFoundException, DuplicateAliasException
@@ -254,5 +263,21 @@ def delete_url(
         url=url,
     )
 
-    
+def get_dashboard(db: Session) -> DashboardResponse:
+    return DashboardResponse(
+        total_urls=crud.get_total_urls(db),
+        active_urls=crud.get_active_urls(db),
+        expired_urls=crud.get_expired_urls(db),
+        total_clicks=crud.get_total_clicks(db),
+
+        top_urls=[
+            DashboardTopURL.model_validate(url)
+            for url in crud.get_top_urls(db)
+        ],
+
+        recent_urls=[
+            DashboardRecentURL.model_validate(url)
+            for url in crud.get_recent_urls(db)
+        ],
+    )
     

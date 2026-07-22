@@ -164,3 +164,67 @@ def delete_url(
 ):
     db.delete(url)
     db.commit()
+
+## Dashboard specific CRUD Operations
+def get_total_urls(db: Session) -> int:
+    return db.query(func.count(URL.id)).scalar() or 0
+
+def get_active_urls(db: Session) -> int:
+    return (
+        db.query(func.count(URL.id))
+        .filter(
+            or_(
+                URL.expires_at.is_(None),
+                URL.expires_at > datetime.now(timezone.utc),
+            )
+        )
+        .scalar()
+        or 0
+    )
+
+def get_expired_urls(db: Session) -> int:
+    return (
+        db.query(func.count(URL.id))
+        .filter(
+            URL.expires_at <= datetime.now(timezone.utc)
+        )
+        .scalar()
+        or 0
+    )
+
+def get_total_clicks(db: Session) -> int:
+    return (
+        db.query(func.sum(URL.clicks))
+        .scalar()
+        or 0
+    )
+
+def get_top_urls(
+    db: Session,
+    limit: int = 5,
+) -> list[URL]:
+
+    return (
+        db.query(URL)
+        .order_by(URL.clicks.desc())
+        .limit(limit)
+        .all()
+    )
+
+def get_recent_urls(
+    db: Session,
+    limit: int = 5,
+) -> list[URL]:
+
+    return (
+        db.query(URL)
+        .order_by(URL.created_at.desc())
+        .limit(limit)
+        .all()
+    )
+
+
+
+
+
+
