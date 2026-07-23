@@ -2,6 +2,7 @@
 from fastapi import FastAPI, Response, status
 from app.api import shorten, redirect, urls
 from app.api.health import router as health_router
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.middleware.logging import RequestLoggingMiddleware
 from app.exceptions.handlers import register_exception_handler
@@ -18,6 +19,19 @@ app = FastAPI(
     title="URL Shortener",
     lifespan=lifespan
 )
+origins = [
+    "https://url-shortener-frontend-lemon-rho.vercel.app",
+    "https://url-shortener-frontend-kn839v9qf-rajrishi07s-projects.vercel.app",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 register_exception_handler(app)
 app.add_middleware(RequestLoggingMiddleware)
 app.include_router(health_router)
