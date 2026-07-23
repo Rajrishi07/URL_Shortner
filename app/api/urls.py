@@ -1,4 +1,4 @@
-from fastapi import Response, Depends, APIRouter, Depends, Query, status
+from fastapi import Response, Depends, APIRouter, Depends, Query, status, Request
 from sqlalchemy.orm import Session
 
 
@@ -15,14 +15,15 @@ url_router = APIRouter()
 )
 def get_analytics(
     short_code : str,
+    request: Request,
     db : Session = Depends(get_db),
 ):
     
     url = url_services.get_analytics(db, short_code)
-    
+    base_url = str(request.base_url).rstrip("/")
     return {
         "original_url": url.original_url,
-        "short_url": f"{settings.BASE_URL}/{url.short_code}",
+        "short_url": f"{base_url}/{url.short_code}",
         "clicks": url.clicks,
         "created_at": url.created_at,
         "last_accessed": url.last_accessed,

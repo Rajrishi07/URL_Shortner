@@ -22,10 +22,10 @@ def shorten(
         custom_alias=request.custom_alias,
         expires_in_days=request.expires_in_days,
     )
-
+    base_url = str(request.base_url).rstrip("/")
     return schemas.URLResponse(
         id=url.id,
-        short_url=f"{settings.BASE_URL}/{url.short_code}",
+        short_url=f"{base_url}/{url.short_code}",
         expires_at=url.expires_at.isoformat() if url.expires_at else None,
     )
 
