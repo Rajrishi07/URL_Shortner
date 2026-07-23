@@ -1,16 +1,28 @@
 from app import crud, utils
 from app.logger import logger
 from app.config import settings
+from app.schemas import (
+    URLItem, 
+    URLListResponse, 
+    URLSort, 
+    URLUpdateRequest,
+    DashboardResponse,
+    DashboardTopURL,
+    DashboardRecentURL,
+)
+
 
 from app.domain import ResolvedURL
-from app.exceptions.url import URLExpiredException, URLNotFoundException, InvalidURLException, DuplicateAliasException
+from app.exceptions.url import URLExpiredException, URLNotFoundException, URLIdNotFoundException, DuplicateAliasException
 from sqlalchemy.orm import Session
 
 from datetime import timezone, timedelta, datetime
 
 import json
+import math
 
 from app.redis_client import redis_client
+
 CACHE_PREFIX = "url:"
 CACHE_TTL = 3600
 
@@ -152,3 +164,120 @@ def get_analytics(db: Session, short_code):
     if not url:
         raise URLNotFoundException(short_code)
     return url
+
+def list_urls(
+    db: Session,
+    page: int,
+    limit: int,
+    search: str | None,
+    sort: URLSort,
+    active_only: bool,
+) -> URLListResponse:
+
+    urls, total = crud.get_urls(
+        db=db,
+        page=page,
+        limit=limit,
+        search=search,
+        sort=sort,
+        active_only=active_only,
+    )
+
+    pages = math.ceil(total / limit) if total else 0
+
+    return URLListResponse(
+        items=[
+            URLItem.model_validate(url)
+            for url in urls
+        ],
+        page=page,
+        pages=pages,
+        total=total,
+    )
+
+def get_url(
+    db: Session,
+    url_id: int,
+) -> URLItem:
+
+    url = crud.get_url_by_id(db, url_id)
+
+    if url is None:
+        raise URLIdNotFoundException(url_id)
+
+    return URLItem.model_validate(url)
+
+def update_url(
+    db: Session,
+    url_id: int,
+    payload: URLUpdateRequest,
+) -> URLItem:
+
+    # Ensure the URL exists
+    url = crud.get_url_by_id(
+        db=db,
+        url_id=url_id,
+    )
+
+    if url is None:
+        raise URLIdNotFoundException(url_id)
+
+    # Validate custom alias (if being updated)
+    if (
+        payload.custom_alias is not None
+        and payload.custom_alias != url.short_code
+    ):
+        existing = crud.get_url_by_short_code(
+            db=db,
+            short_code=payload.custom_alias,
+        )
+
+        if existing is not None:
+            raise DuplicateAliasException(payload.custom_alias)
+
+    # Persist changes
+    updated_url = crud.update_url(
+        db=db,
+        url=url,
+        custom_alias=payload.custom_alias,
+        expires_at=payload.expires_at,
+    )
+
+    return URLItem.model_validate(updated_url)
+
+def delete_url(
+    db: Session,
+    url_id: int,
+) -> None:
+
+    url = crud.get_url_by_id(
+        db=db,
+        url_id=url_id,
+    )
+
+    if url is None:
+        raise URLIdNotFoundException(url_id)
+
+    crud.delete_url(
+        db=db,
+        url=url,
+    )
+
+def get_dashboard(db: Session) -> DashboardResponse:
+    return DashboardResponse(
+        total_urls=crud.get_total_urls(db),
+        active_urls=crud.get_active_urls(db),
+        expired_urls=crud.get_expired_urls(db),
+        total_clicks=crud.get_total_clicks(db),
+
+        top_urls=[
+            DashboardTopURL.model_validate(url)
+            for url in crud.get_top_urls(db)
+        ],
+
+        recent_urls=[
+            DashboardRecentURL.model_validate(url)
+            for url in crud.get_recent_urls(db)
+        ],
+    )
+    

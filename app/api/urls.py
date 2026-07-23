@@ -1,4 +1,4 @@
-from fastapi import Depends, APIRouter, Depends
+from fastapi import Response, Depends, APIRouter, Depends, Query, status
 from sqlalchemy.orm import Session
 
 
@@ -27,3 +27,81 @@ def get_analytics(
         "created_at": url.created_at,
         "last_accessed": url.last_accessed,
     }
+
+@url_router.get(
+    "/urls",
+    response_model=schemas.URLListResponse,
+)
+def get_urls(
+    page: int = Query(1, ge=1),
+    limit: int = Query(10, ge=1, le=100),
+    search: str | None = None,
+    sort: str = "created_at_desc",
+    active_only: bool = False,
+    db: Session = Depends(get_db),
+):
+
+    return url_services.list_urls(
+        db=db,
+        page=page,
+        limit=limit,
+        search=search,
+        sort=sort,
+        active_only=active_only,
+    )
+
+@url_router.get(
+    "/urls/{url_id}",
+    response_model=schemas.URLItem,
+)
+def get_url(
+    url_id: int,
+    db: Session = Depends(get_db),
+):
+    return url_services.get_url(
+        db=db,
+        url_id=url_id,
+    )
+@url_router.patch(
+    "/urls/{url_id}",
+    response_model=schemas.URLItem,
+)
+def update_url(
+    url_id: int,
+    payload: schemas.URLUpdateRequest,
+    db: Session = Depends(get_db),
+):
+
+    return url_services.update_url(
+        db=db,
+        url_id=url_id,
+        payload=payload,
+    )
+
+
+@url_router.delete(
+    "/urls/{url_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+def delete_url(
+    url_id: int,
+    db: Session = Depends(get_db),
+):
+
+    url_services.delete_url(
+        db=db,
+        url_id=url_id,
+    )
+
+    return Response(
+        status_code=status.HTTP_204_NO_CONTENT,
+    )
+
+@url_router.get(
+    "/dashboard",
+    response_model=schemas.DashboardResponse,
+)
+def get_dashboard(
+    db: Session = Depends(get_db),
+):
+    return url_services.get_dashboard(db)

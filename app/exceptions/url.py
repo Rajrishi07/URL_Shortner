@@ -2,6 +2,14 @@ from app.exceptions.codes import ErrorCode
 from app.exceptions.base import AppException
 from http import HTTPStatus
 
+class URLIdNotFoundException(AppException):
+    def __init__(self, url_id: str):
+            super().__init__(
+                message=f"Short URL with ID : '{url_id}' does not exist.",
+                error_code=ErrorCode.URL_NOT_FOUND,
+                status_code=HTTPStatus.NOT_FOUND,
+            )
+
 class URLNotFoundException(AppException):
 
     def __init__(self, short_code: str):

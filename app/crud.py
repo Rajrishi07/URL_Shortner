@@ -1,6 +1,10 @@
 from sqlalchemy.orm import Session
 from app.models import URL
 from sqlalchemy.sql import func
+from sqlalchemy import or_
+from sqlalchemy.orm import Session
+
+from app.schemas import URLSort
 
 from datetime import datetime, timezone
 
@@ -69,3 +73,158 @@ def delete_expired_utls(db: Session) -> int:
     )
     db.commit()
     return deleted
+
+
+def get_urls(
+    db: Session,
+    page: int,
+    limit: int,
+    search: str | None,
+    sort: URLSort,
+    active_only: bool,
+) -> tuple[list[URL], int]:
+
+    query = db.query(URL)
+
+    # Search
+    if search:
+        query = query.filter(
+            or_(
+                URL.short_code.ilike(f"%{search}%"),
+                URL.original_url.ilike(f"%{search}%"),
+            )
+        )
+
+    # Active filter
+    if active_only:
+        now = datetime.now(timezone.utc)
+
+        query = query.filter(
+            or_(
+                URL.expires_at.is_(None),
+                URL.expires_at > now,
+            )
+        )
+        
+    #Shorting
+    SORT_MAPPING = {
+        URLSort.CREATED_AT_DESC: URL.created_at.desc(),
+        URLSort.CREATED_AT_ASC: URL.created_at.asc(),
+        URLSort.CLICKS_DESC: URL.clicks.desc(),
+        URLSort.CLICKS_ASC: URL.clicks.asc(),
+    }
+
+    query = query.order_by(
+        SORT_MAPPING[sort]
+    )
+
+    total = query.count()
+
+    items = (
+        query.offset((page - 1) * limit)
+        .limit(limit)
+        .all()
+    )
+
+    return items, total
+
+
+def get_url_by_id(
+    db: Session,
+    url_id: int,
+) -> URL | None:
+
+    return (
+        db.query(URL)
+        .filter(URL.id == url_id)
+        .first()
+    )
+
+def update_url(
+    db: Session,
+    url: URL,
+    *,
+    custom_alias: str | None,
+    expires_at: datetime | None,
+) -> URL:
+    if custom_alias is not None:
+        url.short_code = custom_alias
+
+    if expires_at is not None:
+        url.expires_at = expires_at
+
+    db.commit()
+    db.refresh(url)
+
+    return url
+
+def delete_url(
+    db: Session,
+    url: URL,
+):
+    db.delete(url)
+    db.commit()
+
+## Dashboard specific CRUD Operations
+def get_total_urls(db: Session) -> int:
+    return db.query(func.count(URL.id)).scalar() or 0
+
+def get_active_urls(db: Session) -> int:
+    return (
+        db.query(func.count(URL.id))
+        .filter(
+            or_(
+                URL.expires_at.is_(None),
+                URL.expires_at > datetime.now(timezone.utc),
+            )
+        )
+        .scalar()
+        or 0
+    )
+
+def get_expired_urls(db: Session) -> int:
+    return (
+        db.query(func.count(URL.id))
+        .filter(
+            URL.expires_at <= datetime.now(timezone.utc)
+        )
+        .scalar()
+        or 0
+    )
+
+def get_total_clicks(db: Session) -> int:
+    return (
+        db.query(func.sum(URL.clicks))
+        .scalar()
+        or 0
+    )
+
+def get_top_urls(
+    db: Session,
+    limit: int = 5,
+) -> list[URL]:
+
+    return (
+        db.query(URL)
+        .order_by(URL.clicks.desc())
+        .limit(limit)
+        .all()
+    )
+
+def get_recent_urls(
+    db: Session,
+    limit: int = 5,
+) -> list[URL]:
+
+    return (
+        db.query(URL)
+        .order_by(URL.created_at.desc())
+        .limit(limit)
+        .all()
+    )
+
+
+
+
+
+
