@@ -23,7 +23,7 @@ def readiness(db: Session = Depends(get_db)):
             status_code=503,
             detail="Database unavailable"
         )
-
+    
     try:
         redis_client.ping()
 

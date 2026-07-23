@@ -1,10 +1,5 @@
-from redis import Redis
+from upstash_redis import Redis
 
 from app.config import settings
 
-redis_client = Redis(
-    host=settings.REDIS_HOST,
-    port=settings.REDIS_PORT,
-    db=settings.REDIS_DB,
-    decode_responses=True,
-)
+redis_client = Redis(url=settings.UPSTASH_REDIS_REST_URL, token=settings.UPSTASH_REDIS_REST_TOKEN)
