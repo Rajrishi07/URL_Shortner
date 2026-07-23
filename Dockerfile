@@ -13,9 +13,9 @@ RUN uv sync --frozen --no-dev
 
 ENV PATH="/app/.venv/bin:$PATH"
 
-EXPOSE 8000
-
 COPY docker/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
+
+EXPOSE 8000
 
 ENTRYPOINT ["/entrypoint.sh"]
