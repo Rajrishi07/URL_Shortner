@@ -23,6 +23,7 @@ app = FastAPI(
 
 origins = [
     "https://url-shortener-frontend-lemon-rho.vercel.app",
+    "https://url-shortener-frontend-kn839v9qf-rajrishi07s-projects.vercel.app"
 ]
 
 app.add_middleware(
