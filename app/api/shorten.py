@@ -1,4 +1,4 @@
-from fastapi import Depends, HTTPException, APIRouter
+from fastapi import Depends, APIRouter, Request
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -12,16 +12,18 @@ shorten_router = APIRouter()
 
 @shorten_router.post("/shorten", response_model=schemas.URLResponse)
 def shorten(
-    request : schemas.URLCreate,
+    request : Request,
+    payload : schemas.URLCreate,
     db: Session = Depends(get_db)
 ):
-    logger.info("Creating short URL for %s", request.url)
+    logger.info("Creating short URL for %s", payload.url)
     url = url_services.create_short_url(
         db=db,
-        original_url=str(request.url),
-        custom_alias=request.custom_alias,
-        expires_in_days=request.expires_in_days,
+        original_url=str(payload.url),
+        custom_alias=payload.custom_alias,
+        expires_in_days=payload.expires_in_days,
     )
+    
     base_url = str(request.base_url).rstrip("/")
     return schemas.URLResponse(
         id=url.id,
